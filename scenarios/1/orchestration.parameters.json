@@ -16,6 +16,19 @@
                 "publisher": "Microsoft"
               }
             ]
+        },
+        "parAddressPrefixes": {
+            "value": [
+                "10.0.0.0/23"
+            ]
+        },
+        "parSubnets": {
+            "value": [
+                {
+                    "name": "sc1subnet",
+                    "addressPrefix": "10.0.0.0/24"
+                }
+            ]
         }
     }
 }

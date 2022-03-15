@@ -13,6 +13,10 @@ param parLawSolutions array = [
   }
 ]
 
+param parAddressPrefixes array
+
+param parSubnets array
+
 // Variables
 
 var varDeploymentNames = {
@@ -20,6 +24,7 @@ var varDeploymentNames = {
   modLaw: 'scenario-1-law'
   modAppInsights: 'scenario-1-appInsights'
   modKeyVault: 'scenario-1-keyVault'
+  modVNet: 'scenario-1-vNet'
 }
 
 var varResourceNaming = {
@@ -27,6 +32,7 @@ var varResourceNaming = {
   modLaw: 'law-${parNamePrefix}-001'
   modAppInsights: 'appi-${parNamePrefix}-001'
   modKeyVault: 'kvlt-${parNamePrefix}-001'
+  modVNet: 'vnet-${parNamePrefix}-001'
 }
 
 // Resources
@@ -81,5 +87,19 @@ module modKeyVault '../../carml/arm/Microsoft.KeyVault/vaults/deploy.bicep' = {
     name: varResourceNaming.modKeyVault
     location: parLocation
     diagnosticWorkspaceId: modLaw.outputs.resourceId
+  }
+}
+
+module modVNet '../../carml/arm/Microsoft.Network/virtualNetworks/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ]
+  name: varDeploymentNames.modVNet
+  params: {
+    name: varResourceNaming.modVNet
+    location: parLocation
+    addressPrefixes: parAddressPrefixes
+     subnets: parSubnets
   }
 }
