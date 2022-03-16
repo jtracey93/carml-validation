@@ -48,6 +48,11 @@
               {
                 "name": "AzureFirewallSubnet",
                 "addressPrefix": "10.2.255.0/24"
+              },
+              {
+                "name": "pe-subnet",
+                "addressPrefix": "10.2.100.0/24",
+                "privateEndpointNetworkPolicies": "Disabled"
               }
             ]
         }

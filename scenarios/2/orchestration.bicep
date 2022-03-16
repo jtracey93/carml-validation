@@ -41,6 +41,11 @@ param parVnetHubSubnets array = [
     name: 'AzureFirewallSubnet'
     addressPrefix: '10.2.255.0/24'
   }
+  {
+    name: 'pe-subnet'
+    addressPrefix: '10.2.100.0/24'
+    privateEndpointNetworkPolicies: 'Disabled'
+  }
 ]
 
 // Variables
@@ -55,6 +60,10 @@ var varDeploymentNames = {
   modACR: 'scenario-2-acr'
   modVnetAks: 'scenario-2-vnet-aks'
   modVnetHub: 'scenario-2-vnet-hub'
+  modPrivateDnsKeyVault: 'scenario-2-private-dns-key-vault'
+  modPrivateDnsACR: 'scenario-2-private-dns-acr'
+  modPrivateDnsSQL: 'scenario-2-private-dns-sql'
+  modPrivateDnsAKS: 'scenario-2-private-dns-aks'
 }
 
 var varResourceNaming = {
@@ -67,6 +76,10 @@ var varResourceNaming = {
   modACR: 'acr${parNamePrefix}001'
   modVnetAks: 'vnet-${parNamePrefix}-aks-001'
   modVnetHub: 'vnet-${parNamePrefix}-hub-001'
+  modPrivateDnsKeyVault: 'privatelink.vaultcore.azure.net'
+  modPrivateDnsACR: 'privatelink.azurecr.io'
+  modPrivateDnsSQL: 'privatelink.database.windows.net'
+  modPrivateDnsAKS: 'privatelink.${parLocation}.azmk8s.io'
 }
 
 // Resources
@@ -122,6 +135,12 @@ module modKeyVault '../../carml/arm/Microsoft.KeyVault/vaults/deploy.bicep' = {
     location: parLocation
     diagnosticWorkspaceId: modLaw.outputs.resourceId
     enableSoftDelete: false
+    privateEndpoints: [
+      {
+        subnetResourceId: modVnetHub.outputs.subnetResourceIds[3]
+        service: 'vault'
+      }
+    ]
   }
 }
 
@@ -136,6 +155,12 @@ module modACR '../../carml/arm/Microsoft.ContainerRegistry/registries/deploy.bic
     name: varResourceNaming.modACR
     location: parLocation
     diagnosticWorkspaceId: modLaw.outputs.resourceId
+    privateEndpoints: [
+      {
+        subnetResourceId: modVnetHub.outputs.subnetResourceIds[3]
+        service: 'registry'
+      }
+    ]
   }
 }
 
@@ -182,6 +207,93 @@ module modVnetHub '../../carml/arm/Microsoft.Network/virtualNetworks/deploy.bice
 }
 
 // Private DNS Zones
+module modPrivateDnsKeyVault '../../carml/arm/Microsoft.Network/privateDnsZones/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ]
+  name: varDeploymentNames.modPrivateDnsKeyVault
+  params: {
+    name: varResourceNaming.modPrivateDnsKeyVault
+    location: parLocation
+    virtualNetworkLinks: [
+      {
+        virtualNetworkResourceId: modVnetHub.outputs.resourceId
+        registrationEnabled: false
+      }
+      {
+        virtualNetworkResourceId: modVnetAks.outputs.resourceId
+        registrationEnabled: false
+      }
+    ]
+  }
+}
+
+module modPrivateDnsACR '../../carml/arm/Microsoft.Network/privateDnsZones/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ]
+  name: varDeploymentNames.modPrivateDnsACR
+  params: {
+    name: varResourceNaming.modPrivateDnsACR
+    location: parLocation
+    virtualNetworkLinks: [
+      {
+        virtualNetworkResourceId: modVnetHub.outputs.resourceId
+        registrationEnabled: false
+      }
+      {
+        virtualNetworkResourceId: modVnetAks.outputs.resourceId
+        registrationEnabled: false
+      }
+    ]
+  }
+}
+
+module modPrivateDnsSQL '../../carml/arm/Microsoft.Network/privateDnsZones/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ]
+  name: varDeploymentNames.modPrivateDnsSQL
+  params: {
+    name: varResourceNaming.modPrivateDnsSQL
+    location: parLocation
+    virtualNetworkLinks: [
+      {
+        virtualNetworkResourceId: modVnetHub.outputs.resourceId
+        registrationEnabled: false
+      }
+      {
+        virtualNetworkResourceId: modVnetAks.outputs.resourceId
+        registrationEnabled: false
+      }
+    ]
+  }
+}
+
+module modPrivateDnsAKS '../../carml/arm/Microsoft.Network/privateDnsZones/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ]
+  name: varDeploymentNames.modPrivateDnsAKS
+  params: {
+    name: varResourceNaming.modPrivateDnsAKS
+    location: parLocation
+    virtualNetworkLinks: [
+      {
+        virtualNetworkResourceId: modVnetHub.outputs.resourceId
+        registrationEnabled: false
+      }
+      {
+        virtualNetworkResourceId: modVnetAks.outputs.resourceId
+        registrationEnabled: false
+      }
+    ]
+  }
+}
 
 // Azure Firewall
 
