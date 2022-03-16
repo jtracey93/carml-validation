@@ -17,6 +17,7 @@ var varDeploymentNames = {
   modAKS: 'scenario-2-aks'
   modSQL: 'scenario-2-sql'
   modACR: 'scenario-2-acr'
+  modVNet: 'scenario-2-vNet'
 }
 
 var varResourceNaming = {
@@ -27,6 +28,7 @@ var varResourceNaming = {
   modAKS: 'aks-${parNamePrefix}-001'
   modSQL: 'sql-${parNamePrefix}-001sdf'
   modACR: 'acr${parNamePrefix}001'
+  modVNet: 'vNet-${parNamePrefix}-001'
 }
 
 resource resExistingLaw 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' existing = {
@@ -57,3 +59,54 @@ module modSQL '../../carml/arm/Microsoft.Sql/servers/deploy.bicep' = {
     ]
   }
 }
+
+//AKS
+module modAKS '../../carml/arm/Microsoft.ContainerService/managedClusters/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  name: varDeploymentNames.modAKS
+  params: {
+    name: varResourceNaming.modAKS
+    location: parLocation
+    primaryAgentPoolProfile: [
+      {
+        name: 'npsystem'
+        count: 3
+        vmSize: 'Standard_DS2'
+        osDiskSizeGB: 80
+        osDiskType: 'Ephemeral'
+        osType: 'Linux'
+        minCount: 3
+        maxCount: 4
+        enableAutoScaling: true
+        type: 'VirtualMachineScaleSets'
+        mode: 'System'
+        scaleSetPriority: 'Regular'
+        scaleSetEvictionPolicy: 'Delete'
+        orchestratorVersion: '1.22.4'
+        enableNodePublicIP: false
+        maxPods: 30
+        upgradeSettings: {
+          maxSurge: '33%'
+        }
+        nodeTaints: [
+          'CriticalAddonsOnly=true:NoSchedule'
+        ]
+      }
+    ]
+    systemAssignedIdentity: true
+  }
+}
+
+// module modVNet '../../carml/arm/Microsoft.Network/virtualNetworks/deploy.bicep' = {
+//   scope: resourceGroup(varResourceNaming.modRsg)
+//   dependsOn: [
+//     modRSG
+//   ]
+//   name: varDeploymentNames.modVNet
+//   params: {
+//     name: varResourceNaming.modVNet
+//     location: parLocation
+//     addressPrefixes: parAddressPrefixes
+//      subnets: parSubnets
+//   }
+// }

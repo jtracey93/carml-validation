@@ -104,20 +104,5 @@ module modACR '../../carml/arm/Microsoft.ContainerRegistry/registries/deploy.bic
   }
 }
 
-//AKS
-// module modAKS '../../carml/arm/Microsoft.ContainerService/managedClusters/deploy.bicep' = {
-//   scope: resourceGroup(varResourceNaming.modRsg)
-//   dependsOn: [
-//     modACR
-//   ]
-//   name: varDeploymentNames.modAKS
-//   params: {
-//     name: varResourceNaming.modAKS
-//     primaryAgentPoolProfile: 
-//   }
-// }
-
-
-
 output outLawResoruceID string = modLaw.outputs.resourceId
 output outKeyVaultResourceID string = modKeyVault.outputs.resourceId
