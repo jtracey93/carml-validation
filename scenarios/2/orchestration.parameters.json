@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "parLocation": {
-            "value": "westus2"
+            "value": "northeurope"
         },
         "parNamePrefix": {
             "value": "scn2"
@@ -14,6 +14,40 @@
                 "name": "VMInsights",
                 "product": "OMSGallery",
                 "publisher": "Microsoft"
+              }
+            ]
+        },
+        "parVnetAksCIDR": {
+            "value": [
+              "10.1.0.0/16"
+            ]
+        },
+        "parVnetAksSubnets": {
+            "value": [
+              {
+                "name": "aks-subnet",
+                "addressPrefix": "10.1.0.0/22"
+              }
+            ]
+        },
+        "parVnetHubCIDR": {
+            "value": [
+              "10.2.0.0/16"
+            ]
+        },
+        "parVnetHubSubnets": {
+            "value": [
+              {
+                "name": "vm-subnet",
+                "addressPrefix": "10.2.0.0/24"
+              },
+              {
+                "name": "AzureBastionSubnet",
+                "addressPrefix": "10.2.240.0/24"
+              },
+              {
+                "name": "AzureFirewallSubnet",
+                "addressPrefix": "10.2.255.0/24"
               }
             ]
         }

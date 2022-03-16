@@ -13,6 +13,36 @@ param parLawSolutions array = [
   }
 ]
 
+param parVnetAksCIDR array = [
+  '10.1.0.0/16'
+]
+
+param parVnetAksSubnets array = [
+  {
+    name: 'aks-subnet'
+    addressPrefix: '10.1.0.0/22'
+  }
+]
+
+param parVnetHubCIDR array = [
+  '10.2.0.0/16'
+]
+
+param parVnetHubSubnets array = [
+  {
+    name: 'vm-subnet'
+    addressPrefix: '10.2.0.0/24'
+  }
+  {
+    name: 'AzureBastionSubnet'
+    addressPrefix: '10.2.240.0/24'
+  }
+  {
+    name: 'AzureFirewallSubnet'
+    addressPrefix: '10.2.255.0/24'
+  }
+]
+
 // Variables
 
 var varDeploymentNames = {
@@ -23,6 +53,8 @@ var varDeploymentNames = {
   modAKS: 'scenario-2-aks'
   modSQL: 'scenario-2-sql'
   modACR: 'scenario-2-acr'
+  modVnetAks: 'scenario-2-vnet-aks'
+  modVnetHub: 'scenario-2-vnet-hub'
 }
 
 var varResourceNaming = {
@@ -33,6 +65,8 @@ var varResourceNaming = {
   modAKS: 'aks-${parNamePrefix}-001'
   modSQL: 'sql-${parNamePrefix}-001'
   modACR: 'acr${parNamePrefix}001'
+  modVnetAks: 'vnet-${parNamePrefix}-aks-001'
+  modVnetHub: 'vnet-${parNamePrefix}-hub-001'
 }
 
 // Resources
@@ -87,6 +121,7 @@ module modKeyVault '../../carml/arm/Microsoft.KeyVault/vaults/deploy.bicep' = {
     name: varResourceNaming.modKeyVault
     location: parLocation
     diagnosticWorkspaceId: modLaw.outputs.resourceId
+    enableSoftDelete: false
   }
 }
 
@@ -104,11 +139,51 @@ module modACR '../../carml/arm/Microsoft.ContainerRegistry/registries/deploy.bic
   }
 }
 
-// VNETs - 1 & 2 
+//// VNETs - 1 & 2 
 
-// VNET Peering
+// VNET 1 - AKS
+module modVnetAks '../../carml/arm/Microsoft.Network/virtualNetworks/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ]
+  name: varDeploymentNames.modVnetAks
+  params: {
+    addressPrefixes: parVnetAksCIDR
+    location: parLocation
+    name: varResourceNaming.modVnetAks
+    subnets: parVnetAksSubnets
+  }
+}
+
+// VNET 2 - Hub
+module modVnetHub '../../carml/arm/Microsoft.Network/virtualNetworks/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ]
+  name: varDeploymentNames.modVnetHub
+  params: {
+    addressPrefixes: parVnetHubCIDR
+    location: parLocation
+    name: varResourceNaming.modVnetHub
+    subnets: parVnetHubSubnets
+    virtualNetworkPeerings: [
+      {
+        remoteVirtualNetworkId: modVnetAks.outputs.resourceId
+        allowForwardedTraffic: true
+        allowVirtualNetworkAccess: true
+        remotePeeringEnabled: true
+        remotePeeringAllowVirtualNetworkAccess: true
+        remotePeeringAllowForwardedTraffic: true
+      }
+    ]
+  }
+}
 
 // Private DNS Zones
+
+// Azure Firewall
 
 output outLawResoruceID string = modLaw.outputs.resourceId
 output outKeyVaultResourceID string = modKeyVault.outputs.resourceId
