@@ -39,6 +39,7 @@ resource resExistingKeyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' exis
   name: '${split(parExistingKeyVaultResourceID, '/')[8]}'
 }
 
+// SQL - With Private Endpoints
 module modSQL '../../carml/arm/Microsoft.Sql/servers/deploy.bicep' = {
   name: varDeploymentNames.modSQL
   params: {
@@ -97,16 +98,6 @@ module modAKS '../../carml/arm/Microsoft.ContainerService/managedClusters/deploy
   }
 }
 
-// module modVNet '../../carml/arm/Microsoft.Network/virtualNetworks/deploy.bicep' = {
-//   scope: resourceGroup(varResourceNaming.modRsg)
-//   dependsOn: [
-//     modRSG
-//   ]
-//   name: varDeploymentNames.modVNet
-//   params: {
-//     name: varResourceNaming.modVNet
-//     location: parLocation
-//     addressPrefixes: parAddressPrefixes
-//      subnets: parSubnets
-//   }
-// }
+// VMs - VNET 2
+
+// Bastion

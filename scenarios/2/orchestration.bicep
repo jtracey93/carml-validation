@@ -62,7 +62,7 @@ module modLaw '../../carml/arm/Microsoft.OperationalInsights/workspaces/deploy.b
   }
 }
 
-// App Insights
+// App Insights 
 module modAppInsights '../../carml/arm/Microsoft.Insights/components/deploy.bicep' = {
   scope: resourceGroup(varResourceNaming.modRsg)
   dependsOn: [
@@ -76,7 +76,7 @@ module modAppInsights '../../carml/arm/Microsoft.Insights/components/deploy.bice
   }
 }
 
-// Key Vault
+// Key Vault - With Private Endpoints
 module modKeyVault '../../carml/arm/Microsoft.KeyVault/vaults/deploy.bicep' = {
   scope: resourceGroup(varResourceNaming.modRsg)
   dependsOn: [
@@ -90,7 +90,7 @@ module modKeyVault '../../carml/arm/Microsoft.KeyVault/vaults/deploy.bicep' = {
   }
 }
 
-// ACR
+// ACR - With Private Endpoints
 module modACR '../../carml/arm/Microsoft.ContainerRegistry/registries/deploy.bicep' = {
   scope: resourceGroup(varResourceNaming.modRsg)
   dependsOn: [
@@ -103,6 +103,12 @@ module modACR '../../carml/arm/Microsoft.ContainerRegistry/registries/deploy.bic
     diagnosticWorkspaceId: modLaw.outputs.resourceId
   }
 }
+
+// VNETs - 1 & 2 
+
+// VNET Peering
+
+// Private DNS Zones
 
 output outLawResoruceID string = modLaw.outputs.resourceId
 output outKeyVaultResourceID string = modKeyVault.outputs.resourceId
