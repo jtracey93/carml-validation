@@ -64,6 +64,8 @@ var varDeploymentNames = {
   modPrivateDnsACR: 'scenario-2-private-dns-acr'
   modPrivateDnsSQL: 'scenario-2-private-dns-sql'
   modPrivateDnsAKS: 'scenario-2-private-dns-aks'
+  modPublicIPAzureFirewall: 'scenario-2-pip-azure-firewall'
+  modAzureFirewall: 'scenario-2-azure-firewall'
 }
 
 var varResourceNaming = {
@@ -80,6 +82,8 @@ var varResourceNaming = {
   modPrivateDnsACR: 'privatelink.azurecr.io'
   modPrivateDnsSQL: 'privatelink.database.windows.net'
   modPrivateDnsAKS: 'privatelink.${parLocation}.azmk8s.io'
+  modPublicIPAzureFirewall: 'pip-azfw-${parNamePrefix}-001'
+  modAzureFirewall: 'azfw-${parNamePrefix}-001'
 }
 
 // Resources
@@ -178,6 +182,7 @@ module modVnetAks '../../carml/arm/Microsoft.Network/virtualNetworks/deploy.bice
     location: parLocation
     name: varResourceNaming.modVnetAks
     subnets: parVnetAksSubnets
+    diagnosticWorkspaceId: modLaw.outputs.resourceId
   }
 }
 
@@ -203,6 +208,7 @@ module modVnetHub '../../carml/arm/Microsoft.Network/virtualNetworks/deploy.bice
         remotePeeringAllowForwardedTraffic: true
       }
     ]
+    diagnosticWorkspaceId: modLaw.outputs.resourceId
   }
 }
 
@@ -215,7 +221,6 @@ module modPrivateDnsKeyVault '../../carml/arm/Microsoft.Network/privateDnsZones/
   name: varDeploymentNames.modPrivateDnsKeyVault
   params: {
     name: varResourceNaming.modPrivateDnsKeyVault
-    location: parLocation
     virtualNetworkLinks: [
       {
         virtualNetworkResourceId: modVnetHub.outputs.resourceId
@@ -237,7 +242,6 @@ module modPrivateDnsACR '../../carml/arm/Microsoft.Network/privateDnsZones/deplo
   name: varDeploymentNames.modPrivateDnsACR
   params: {
     name: varResourceNaming.modPrivateDnsACR
-    location: parLocation
     virtualNetworkLinks: [
       {
         virtualNetworkResourceId: modVnetHub.outputs.resourceId
@@ -259,7 +263,6 @@ module modPrivateDnsSQL '../../carml/arm/Microsoft.Network/privateDnsZones/deplo
   name: varDeploymentNames.modPrivateDnsSQL
   params: {
     name: varResourceNaming.modPrivateDnsSQL
-    location: parLocation
     virtualNetworkLinks: [
       {
         virtualNetworkResourceId: modVnetHub.outputs.resourceId
@@ -281,7 +284,6 @@ module modPrivateDnsAKS '../../carml/arm/Microsoft.Network/privateDnsZones/deplo
   name: varDeploymentNames.modPrivateDnsAKS
   params: {
     name: varResourceNaming.modPrivateDnsAKS
-    location: parLocation
     virtualNetworkLinks: [
       {
         virtualNetworkResourceId: modVnetHub.outputs.resourceId
@@ -296,6 +298,44 @@ module modPrivateDnsAKS '../../carml/arm/Microsoft.Network/privateDnsZones/deplo
 }
 
 // Azure Firewall
+
+module modPublicIPAzureFirewall '../../carml/arm/Microsoft.Network/publicIPAddresses/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ] 
+  name: varDeploymentNames.modPublicIPAzureFirewall
+  params: {
+    name: varResourceNaming.modPublicIPAzureFirewall
+    location: parLocation
+    skuName: 'Standard'
+    publicIPAllocationMethod: 'Static'
+    publicIPAddressVersion: 'IPv4'
+    diagnosticWorkspaceId: modLaw.outputs.resourceId
+  }
+}
+
+module modAzureFirewall '../../carml/arm/Microsoft.Network/azureFirewalls/deploy.bicep' = {
+  scope: resourceGroup(varResourceNaming.modRsg)
+  dependsOn: [
+    modRSG
+  ]
+  name: varDeploymentNames.modAzureFirewall
+  params: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        publicIPAddressResourceId: modPublicIPAzureFirewall.outputs.resourceId
+        subnetResourceId: modVnetHub.outputs.subnetResourceIds[3]
+      }
+    ]
+    location: parLocation
+    name: varResourceNaming.modAzureFirewall
+    azureSkuName: 'AZFW_Hub'
+    azureSkuTier: 'Standard'
+    diagnosticWorkspaceId: modLaw.outputs.resourceId
+  }
+}
 
 output outLawResoruceID string = modLaw.outputs.resourceId
 output outKeyVaultResourceID string = modKeyVault.outputs.resourceId
