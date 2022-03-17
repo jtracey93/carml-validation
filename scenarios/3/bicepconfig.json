@@ -1,0 +1,10 @@
+{
+    "moduleAliases": {
+        "br": {
+            "CoreModules": {
+                "registry": "team4CarmlRegistry.azurecr.io",
+                "modulePath": "bicep/modules"
+            }
+        }
+    }
+}
