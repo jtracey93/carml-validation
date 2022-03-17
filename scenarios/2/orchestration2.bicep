@@ -58,6 +58,7 @@ module modSQL '../../carml/arm/Microsoft.Sql/servers/deploy.bicep' = {
         workspaceId: resExistingLaw.id
       }
     ]
+    
   }
 }
 
